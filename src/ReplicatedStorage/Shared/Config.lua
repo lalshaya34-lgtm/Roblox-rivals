@@ -3,11 +3,9 @@ local Config = {
     MatchLength = 150,
     RoundOverLength = 4,
     RespawnDelay = 1.5,
-    Damage = 26,
-    FireRate = 0.09,
-    HitRange = 340,
     WalkSpeed = 16,
     JumpPower = 50,
+
     SpawnPoints = {
         Vector3.new(-42, 8, -34),
         Vector3.new(42, 8, -34),
@@ -18,6 +16,24 @@ local Config = {
         Vector3.new(-56, 8, 0),
         Vector3.new(56, 8, 0)
     },
+
+    Weapons = {
+        Rifle = {
+            damage = 26,
+            fireRate = 0.12,
+            spread = 0.03,
+            recoil = 0.12,
+            label = "Rifle"
+        },
+        SMG = {
+            damage = 18,
+            fireRate = 0.07,
+            spread = 0.06,
+            recoil = 0.18,
+            label = "SMG"
+        }
+    },
+
     Colors = {
         Floor = Color3.fromRGB(15, 23, 42),
         Arena = Color3.fromRGB(30, 41, 59),
