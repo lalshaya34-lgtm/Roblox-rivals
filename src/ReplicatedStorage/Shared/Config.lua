@@ -1,8 +1,21 @@
 local Config = {
-    LobbyLength = 12,
-    MatchLength = 150,
-    RoundOverLength = 6,
-    RespawnDelay = 1.5,
+    Match = {
+        LobbyLength = 14,
+        MatchLength = 180,
+        RoundOverLength = 8,
+        RespawnDelay = 1.25,
+        MinPlayers = 2,
+        MaxRounds = 3,
+    },
+
+    Player = {
+        WalkSpeed = 16,
+        SprintSpeed = 22,
+        JumpPower = 50,
+        FOV = 70,
+        SprintDrain = 18,
+        SprintRestore = 24,
+    },
 
     WalkSpeed = 16,
     SprintSpeed = 22,
@@ -14,14 +27,14 @@ local Config = {
             readyThreshold = 1,
             roundLimit = 3,
             allowSpectators = true,
-            description = "Relaxed progression and faster rounds"
+            description = "Relaxed progression and faster rounds",
         },
         Ranked = {
             readyThreshold = 2,
             roundLimit = 5,
             allowSpectators = false,
-            description = "Competitive mode with stricter settings"
-        }
+            description = "Competitive mode with stricter settings",
+        },
     },
 
     Maps = {
@@ -29,7 +42,7 @@ local Config = {
         "Crimson",
         "Nightfall",
         "Vault",
-        "Dusk"
+        "Dusk",
     },
 
     TeamColors = {
@@ -49,7 +62,7 @@ local Config = {
             Vector3.new(42, 8, 34),
             Vector3.new(18, 8, 0),
             Vector3.new(0, 8, 52),
-        }
+        },
     },
 
     Classes = {
@@ -60,7 +73,7 @@ local Config = {
             health = 1.0,
             ability = "Dash",
             label = "Scout",
-            description = "Fast flanker with high mobility"
+            description = "Fast flanker with high mobility",
         },
         Support = {
             speed = 0.96,
@@ -69,7 +82,7 @@ local Config = {
             health = 1.1,
             ability = "Shield",
             label = "Support",
-            description = "Balanced utility and sustain"
+            description = "Balanced utility and sustain",
         },
         Vanguard = {
             speed = 0.9,
@@ -78,8 +91,8 @@ local Config = {
             health = 1.2,
             ability = "Armor",
             label = "Vanguard",
-            description = "Tough bruiser with heavy pressure"
-        }
+            description = "Tough bruiser with heavy pressure",
+        },
     },
 
     Weapons = {
@@ -148,7 +161,20 @@ local Config = {
             color = Color3.fromRGB(168, 85, 247),
             unlockPrice = 500,
             tier = 3,
-        }
+        },
+        Revolver = {
+            damage = 48,
+            fireRate = 0.38,
+            spread = 0.02,
+            recoil = 0.18,
+            clipSize = 8,
+            reserve = 32,
+            reloadTime = 1.6,
+            label = "Revolver",
+            color = Color3.fromRGB(248, 250, 252),
+            unlockPrice = 650,
+            tier = 4,
+        },
     },
 
     Shop = {
@@ -163,7 +189,8 @@ local Config = {
             Burst = { price = 350 },
             Shotgun = { price = 400 },
             DMR = { price = 500 },
-        }
+            Revolver = { price = 650 },
+        },
     },
 
     DefaultUnlocks = { "Rifle" },
@@ -181,19 +208,19 @@ local Config = {
         Health = {
             color = Color3.fromRGB(34, 197, 94),
             respawn = 9,
-            amount = 28
+            amount = 28,
         },
         Boost = {
             color = Color3.fromRGB(59, 130, 246),
             respawn = 8,
             speedBoost = 6,
-            duration = 4
+            duration = 4,
         },
         Ammo = {
             color = Color3.fromRGB(245, 158, 11),
             respawn = 8,
-            bonus = 16
-        }
+            bonus = 16,
+        },
     },
 
     Colors = {
@@ -206,8 +233,8 @@ local Config = {
         Text = Color3.fromRGB(248, 250, 252),
         Muted = Color3.fromRGB(148, 163, 184),
         Warning = Color3.fromRGB(245, 158, 11),
-        Victory = Color3.fromRGB(250, 204, 21)
-    }
+        Victory = Color3.fromRGB(250, 204, 21),
+    },
 }
 
 return Config
