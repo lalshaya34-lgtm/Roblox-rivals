@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rivals Arena Browser</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="gameShell">
+    <canvas id="gameCanvas" width="960" height="600"></canvas>
+
+    <div id="hud">
+      <div id="topBar">
+        <div id="teamLabel">RED</div>
+        <div id="statusLabel">LOBBY</div>
+        <div id="timerLabel">00:30</div>
+      </div>
+
+      <div id="healthWrap">
+        <div id="healthBar"><div id="healthFill"></div></div>
+        <div id="healthText">100 / 100</div>
+      </div>
+
+      <div id="weaponPanel">
+        <div id="weaponName">RIFLE</div>
+        <div id="ammoLabel">24 / 72</div>
+      </div>
+
+      <div id="scoreboard">
+        <div class="scoreTitle">SCORE</div>
+        <div id="scoreList"></div>
+      </div>
+
+      <div id="killFeed"></div>
+    </div>
+
+    <div id="overlay">
+      <div id="panel">
+        <h1>RIVALS ARENA</h1>
+        <p>Use WASD to move, mouse to aim, click to shoot, Shift to sprint, and Q to switch weapons.</p>
+        <button id="startBtn">START GAME</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
