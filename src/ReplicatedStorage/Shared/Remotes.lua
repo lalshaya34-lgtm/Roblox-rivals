@@ -23,6 +23,7 @@ end
 return {
     Shoot = ensureRemote("Shoot"),
     Hud = ensureRemote("Hud"),
+    Reload = ensureRemote("Reload"),
     Round = ensureRemote("Round"),
     MatchState = ensureRemote("MatchState")
 }

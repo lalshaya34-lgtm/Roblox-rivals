@@ -9,6 +9,7 @@ local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local currentWeapon = "Rifle"
+local currentAmmo = { weapon = "Rifle", clip = 24, reserve = 72, label = "Rifle" }
 local recoilValue = 0
 
 local screenGui = Instance.new("ScreenGui")
@@ -18,8 +19,8 @@ screenGui.IgnoreGuiInset = true
 screenGui.Parent = playerGui
 
 local topBar = Instance.new("Frame")
-topBar.Size = UDim2.new(0.28, 0, 0.1, 0)
-topBar.Position = UDim2.new(0.36, 0, 0.02, 0)
+topBar.Size = UDim2.new(0.3, 0, 0.12, 0)
+topBar.Position = UDim2.new(0.35, 0, 0.02, 0)
 topBar.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
 topBar.BackgroundTransparency = 0.18
 topBar.BorderSizePixel = 0
@@ -42,12 +43,12 @@ timerLabel.BackgroundTransparency = 1
 timerLabel.Font = Enum.Font.GothamSemibold
 timerLabel.TextScaled = true
 timerLabel.TextColor3 = Color3.fromRGB(191, 219, 254)
-timerLabel.Text = "02:30"
+timerLabel.Text = "02:00"
 timerLabel.Parent = topBar
 
 local weaponLabel = Instance.new("TextLabel")
-weaponLabel.Size = UDim2.new(0.12, 0, 0.04, 0)
-weaponLabel.Position = UDim2.new(0.86, 0, 0.02, 0)
+weaponLabel.Size = UDim2.new(0.12, 0, 0.05, 0)
+weaponLabel.Position = UDim2.new(0.84, 0, 0.02, 0)
 weaponLabel.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
 weaponLabel.BackgroundTransparency = 0.18
 weaponLabel.BorderSizePixel = 0
@@ -56,6 +57,16 @@ weaponLabel.Text = "RIFLE"
 weaponLabel.TextScaled = true
 weaponLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 weaponLabel.Parent = screenGui
+
+local ammoLabel = Instance.new("TextLabel")
+ammoLabel.Size = UDim2.new(0.15, 0, 0.04, 0)
+ammoLabel.Position = UDim2.new(0.84, 0, 0.07, 0)
+ammoLabel.BackgroundTransparency = 1
+ammoLabel.Font = Enum.Font.GothamBold
+ammoLabel.TextScaled = true
+ammoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+ammoLabel.Text = "24 / 72"
+ammoLabel.Parent = screenGui
 
 local leaderboard = Instance.new("Frame")
 leaderboard.Size = UDim2.new(0.22, 0, 0.36, 0)
@@ -209,6 +220,13 @@ local function renderKillFeed(entries)
     end
 end
 
+local function updateAmmoUI()
+    if currentAmmo then
+        ammoLabel.Text = string.format("%d / %d", currentAmmo.clip, currentAmmo.reserve)
+        weaponLabel.Text = string.upper(currentAmmo.weapon or "Rifle")
+    end
+end
+
 local function updateHud(payload)
     if payload.state then
         statusLabel.Text = tostring(payload.state):upper()
@@ -242,9 +260,9 @@ local function updateHud(payload)
         winnerFrame.Visible = false
     end
 
-    if payload.weapon and payload.weapon[player.Name] then
-        currentWeapon = payload.weapon[player.Name]
-        weaponLabel.Text = currentWeapon:upper()
+    if payload.loadout and payload.loadout[player.Name] then
+        currentAmmo = payload.loadout[player.Name]
+        updateAmmoUI()
     end
 end
 
@@ -255,7 +273,9 @@ end)
 local function switchWeapon(newWeapon)
     if newWeapon == "Rifle" or newWeapon == "SMG" then
         currentWeapon = newWeapon
-        weaponLabel.Text = currentWeapon:upper()
+        currentAmmo.weapon = newWeapon
+        updateAmmoUI()
+        Remotes.Shoot:FireServer(newWeapon, Workspace.CurrentCamera and Workspace.CurrentCamera.CFrame.LookVector or Vector3.new(0, 0, -1))
     end
 end
 
@@ -294,6 +314,8 @@ UserInputService.InputBegan:Connect(function(input, processed)
         switchWeapon("Rifle")
     elseif input.KeyCode == Enum.KeyCode.Two then
         switchWeapon("SMG")
+    elseif input.KeyCode == Enum.KeyCode.R then
+        Remotes.Reload:FireServer()
     elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
         fireWeapon()
     end
@@ -308,5 +330,5 @@ updateHud({
     playerCount = 0,
     readyCount = 0,
     winner = nil,
-    weapon = { [player.Name] = currentWeapon }
+    loadout = { [player.Name] = { weapon = "Rifle", clip = 24, reserve = 72, label = "Rifle" } }
 })
