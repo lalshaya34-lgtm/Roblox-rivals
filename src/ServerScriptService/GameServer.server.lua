@@ -12,13 +12,21 @@ local roundState = "Lobby"
 local roundTime = Config.LobbyLength
 local currentWinner = nil
 local currentMapIndex = 1
+local roundLimit = 3
+local teamScores = { Red = 0, Blue = 0 }
 local killFeed = {}
 local lastShotAt = {}
 local weaponByPlayer = {}
 local ammoByPlayer = {}
 local reloadingByPlayer = {}
 local teamByPlayer = {}
-local matchStartedAt = 0
+local playerStats = {}
+local lobbyReady = {}
+local lobbySettings = {
+    mode = "Casual",
+    mapName = "Lattice",
+    roundLimit = 3,
+}
 
 local function ensureTeams()
     local redTeam = Teams:FindFirstChild("Red") or Instance.new("Team")
@@ -34,9 +42,48 @@ local function ensureTeams()
     return redTeam, blueTeam
 end
 
+local function getPlayerStats(player)
+    playerStats[player] = playerStats[player] or {
+        class = "Scout",
+        mode = "Casual",
+        skin = Config.DefaultSkin,
+        ready = false,
+        coins = 0,
+        level = 1,
+        xp = 0,
+        unlockedWeapons = table.clone(Config.DefaultUnlocks),
+        unlockedSkins = { Config.DefaultSkin },
+    }
+
+    return playerStats[player]
+end
+
+local function addXP(player, amount)
+    local stats = getPlayerStats(player)
+    stats.xp = (stats.xp or 0) + amount
+    local levelRate = Config.Progress.levelRate or 100
+
+    while stats.xp >= levelRate do
+        stats.xp = stats.xp - levelRate
+        stats.level = math.min(stats.level + 1, Config.Progress.maxLevel or 30)
+    end
+
+    local leaderstats = player:FindFirstChild("leaderstats")
+    if leaderstats then
+        local levelValue = leaderstats:FindFirstChild("Level") or Instance.new("IntValue")
+        levelValue.Name = "Level"
+        levelValue.Value = stats.level
+        levelValue.Parent = leaderstats
+
+        local xpValue = leaderstats:FindFirstChild("XP") or Instance.new("IntValue")
+        xpValue.Name = "XP"
+        xpValue.Value = stats.xp
+        xpValue.Parent = leaderstats
+    end
+end
+
 local function assignTeam(player)
     local redTeam, blueTeam = ensureTeams()
-
     local redCount = 0
     local blueCount = 0
 
@@ -102,6 +149,21 @@ local function createLeaderstats(player)
     deaths.Value = 0
     deaths.Parent = folder
 
+    local coins = Instance.new("IntValue")
+    coins.Name = "Coins"
+    coins.Value = 0
+    coins.Parent = folder
+
+    local level = Instance.new("IntValue")
+    level.Name = "Level"
+    level.Value = 1
+    level.Parent = folder
+
+    local xp = Instance.new("IntValue")
+    xp.Name = "XP"
+    xp.Value = 0
+    xp.Parent = folder
+
     return folder
 end
 
@@ -129,6 +191,10 @@ local function getSpawnPoint(player)
     return spawnList[index]
 end
 
+local function setTeamScore(teamName, value)
+    teamScores[teamName] = value
+end
+
 local function respawnPlayer(player)
     local character = player.Character or player.CharacterAdded:Wait()
     local root = character:WaitForChild("HumanoidRootPart")
@@ -139,6 +205,12 @@ local function respawnPlayer(player)
     humanoid.JumpPower = Config.JumpPower
     humanoid.Health = humanoid.MaxHealth
     humanoid.AutoRotate = true
+
+    local stats = getPlayerStats(player)
+    local classStats = Config.Classes[stats.class] or Config.Classes.Scout
+    humanoid.WalkSpeed = Config.WalkSpeed * (classStats.speed or 1)
+    humanoid.MaxHealth = 100 * (classStats.health or 1)
+    humanoid.Health = humanoid.MaxHealth
 end
 
 local function getLoadoutForPlayer(player)
@@ -196,13 +268,21 @@ local function broadcastHud()
         loadout = {},
         teams = {},
         reloading = {},
-        currentMap = Config.Maps[currentMapIndex] or Config.Maps[1],
+        currentMap = lobbySettings.mapName or Config.Maps[currentMapIndex] or Config.Maps[1],
+        lobbyReady = lobbyReady,
+        mode = {},
+        class = {},
+        teamScores = teamScores,
+        settings = lobbySettings,
     }
 
     for _, player in ipairs(Players:GetPlayers()) do
+        local data = getPlayerStats(player)
         payload.loadout[player.Name] = getLoadoutForPlayer(player)
         payload.teams[player.Name] = teamByPlayer[player] or "Red"
         payload.reloading[player.Name] = reloadingByPlayer[player] == true
+        payload.mode[player.Name] = data.mode
+        payload.class[player.Name] = data.class
     end
 
     if roundState == "Lobby" then
@@ -218,21 +298,37 @@ local function broadcastHud()
     end
 end
 
-local function computeWinner()
-    local bestName = nil
-    local bestKills = -1
-
-    for _, player in ipairs(Players:GetPlayers()) do
-        local stats = player:FindFirstChild("leaderstats")
-        local kills = stats and stats:FindFirstChild("Kills") and stats.Kills.Value or 0
-
-        if kills > bestKills then
-            bestKills = kills
-            bestName = player.Name
-        end
+local function computeWinnerFromTeamScores()
+    if teamScores.Red == teamScores.Blue then
+        return "Draw"
     end
 
-    return bestName
+    if teamScores.Red > teamScores.Blue then
+        return "Red"
+    end
+
+    return "Blue"
+end
+
+local function checkRoundWinner()
+    local limit = roundLimit
+    local winner = nil
+
+    if teamScores.Red >= limit then
+        winner = "Red"
+    elseif teamScores.Blue >= limit then
+        winner = "Blue"
+    end
+
+    if winner then
+        currentWinner = winner
+        roundState = "Round Over"
+        roundTime = Config.RoundOverLength
+        broadcastHud()
+        return true
+    end
+
+    return false
 end
 
 local function awardKill(killer, victim)
@@ -242,6 +338,13 @@ local function awardKill(killer, victim)
 
     if killer.Team and victim.Team and killer.Team == victim.Team then
         return
+    end
+
+    local killerTeamName = killer.Team and killer.Team.Name or teamByPlayer[killer] or "Red"
+    if killerTeamName == "Red" then
+        teamScores.Red += 1
+    else
+        teamScores.Blue += 1
     end
 
     local killerStats = killer:FindFirstChild("leaderstats")
@@ -254,7 +357,29 @@ local function awardKill(killer, victim)
         victimStats.Deaths.Value += 1
     end
 
+    local coinStats = killer:FindFirstChild("leaderstats")
+    if coinStats and coinStats:FindFirstChild("Coins") then
+        coinStats.Coins.Value += 10
+    end
+
+    addXP(killer, Config.Progress.xpPerKill or 20)
     addKillFeed(killer.Name .. " eliminated " .. victim.Name)
+    checkRoundWinner()
+end
+
+local function allPlayersReady()
+    local players = Players:GetPlayers()
+    if #players == 0 then
+        return false
+    end
+
+    for _, player in ipairs(players) do
+        if not lobbyReady[player] then
+            return false
+        end
+    end
+
+    return true
 end
 
 local function startLobby()
@@ -262,19 +387,29 @@ local function startLobby()
     roundTime = Config.LobbyLength
     currentWinner = nil
     killFeed = {}
+    teamScores.Red = 0
+    teamScores.Blue = 0
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        lobbyReady[player] = false
+    end
+
     broadcastHud()
 end
 
 local function rotateMap()
     currentMapIndex = (currentMapIndex % #Config.Maps) + 1
-    WorldBuilder.build(Workspace, Config, Config.Maps[currentMapIndex])
+    local newMap = Config.Maps[currentMapIndex]
+    lobbySettings.mapName = newMap
+    WorldBuilder.build(Workspace, Config, newMap)
 end
 
 local function startMatch()
     roundState = "Live"
     roundTime = Config.MatchLength
     currentWinner = nil
-    matchStartedAt = os.clock()
+    teamScores.Red = 0
+    teamScores.Blue = 0
     rotateMap()
     broadcastHud()
 
@@ -288,7 +423,21 @@ end
 local function finishMatch()
     roundState = "Round Over"
     roundTime = Config.RoundOverLength
-    currentWinner = computeWinner()
+    currentWinner = computeWinnerFromTeamScores()
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        local stats = getPlayerStats(player)
+        local leaderstats = player:FindFirstChild("leaderstats")
+        if leaderstats and leaderstats:FindFirstChild("Kills") then
+            if currentWinner == teamByPlayer[player] then
+                addXP(player, Config.Progress.xpPerWin or 120)
+                leaderstats.Coins.Value += 25
+            else
+                addXP(player, Config.Progress.xpPerLoss or 40)
+            end
+        end
+    end
+
     broadcastHud()
 end
 
@@ -321,20 +470,46 @@ local function reloadWeapon(player)
     broadcastHud()
 end
 
+local function applyClassStats(player)
+    local data = getPlayerStats(player)
+    local classStats = Config.Classes[data.class] or Config.Classes.Scout
+
+    local character = player.Character
+    if not character then
+        return
+    end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then
+        return
+    end
+
+    humanoid.WalkSpeed = Config.WalkSpeed * (classStats.speed or 1)
+    humanoid.MaxHealth = 100 * (classStats.health or 1)
+    humanoid.Health = humanoid.MaxHealth
+end
+
 local function handlePlayer(player)
     createLeaderstats(player)
     assignTeam(player)
+
+    local data = getPlayerStats(player)
+    data.mode = data.mode or "Casual"
+    data.class = data.class or "Scout"
     setPlayerWeapon(player, "Rifle")
     reloadingByPlayer[player] = false
+    lobbyReady[player] = false
 
     player.CharacterAdded:Connect(function()
         task.wait(0.2)
         respawnPlayer(player)
+        applyClassStats(player)
         broadcastHud()
     end)
 
     if player.Character then
         respawnPlayer(player)
+        applyClassStats(player)
     end
 end
 
@@ -418,7 +593,9 @@ local function tryHitScan(player, weaponName, direction)
         return
     end
 
-    targetHumanoid:TakeDamage(weaponStats.damage)
+    local classStats = Config.Classes[getPlayerStats(player).class] or Config.Classes.Scout
+    local damageMultiplier = classStats.damage or 1
+    targetHumanoid:TakeDamage(weaponStats.damage * damageMultiplier)
 
     if targetHumanoid.Health <= 0 then
         awardKill(player, targetPlayer)
@@ -443,6 +620,11 @@ Remotes.Shoot.OnServerEvent:Connect(function(player, weaponName, direction)
         return
     end
 
+    local data = getPlayerStats(player)
+    if not table.find(data.unlockedWeapons, weaponName) then
+        return
+    end
+
     setPlayerWeapon(player, weaponName)
     tryHitScan(player, weaponByPlayer[player], direction)
 end)
@@ -462,11 +644,108 @@ Remotes.MoveState.OnServerEvent:Connect(function(player, sprinting)
         return
     end
 
-    humanoid.WalkSpeed = sprinting and Config.SprintSpeed or Config.WalkSpeed
+    local classStats = Config.Classes[getPlayerStats(player).class] or Config.Classes.Scout
+    humanoid.WalkSpeed = (sprinting and Config.SprintSpeed or Config.WalkSpeed) * (classStats.speed or 1)
+end)
+
+Remotes.LobbyReady.OnServerEvent:Connect(function(player, isReady)
+    lobbyReady[player] = isReady == true
+    if roundState == "Lobby" then
+        broadcastHud()
+    end
+end)
+
+Remotes.ClassSelect.OnServerEvent:Connect(function(player, className)
+    if not Config.Classes[className] then
+        return
+    end
+
+    local data = getPlayerStats(player)
+    data.class = className
+    applyClassStats(player)
+    broadcastHud()
+end)
+
+Remotes.ModeSelect.OnServerEvent:Connect(function(player, modeName)
+    if not Config.Modes[modeName] then
+        return
+    end
+
+    local data = getPlayerStats(player)
+    data.mode = modeName
+    lobbyReady[player] = false
+    lobbySettings.mode = modeName
+    roundLimit = Config.Modes[modeName].roundLimit or 3
+    broadcastHud()
+end)
+
+Remotes.MapSelect.OnServerEvent:Connect(function(player, mapName)
+    if table.find(Config.Maps, mapName) then
+        lobbySettings.mapName = mapName
+        currentMapIndex = table.find(Config.Maps, mapName) or 1
+        WorldBuilder.build(Workspace, Config, mapName)
+        broadcastHud()
+    end
+end)
+
+Remotes.SettingsApply.OnServerEvent:Connect(function(player, settings)
+    if type(settings) == "table" then
+        if settings.roundLimit then
+            roundLimit = settings.roundLimit
+        end
+        if settings.mapName and table.find(Config.Maps, settings.mapName) then
+            lobbySettings.mapName = settings.mapName
+            currentMapIndex = table.find(Config.Maps, settings.mapName) or 1
+            WorldBuilder.build(Workspace, Config, settings.mapName)
+        end
+        if settings.mode and Config.Modes[settings.mode] then
+            lobbySettings.mode = settings.mode
+        end
+    end
+    broadcastHud()
+end)
+
+Remotes.ShopPurchase.OnServerEvent:Connect(function(player, itemType, itemName)
+    local data = getPlayerStats(player)
+    local stats = player:FindFirstChild("leaderstats")
+    local coins = stats and stats:FindFirstChild("Coins") and stats.Coins.Value or data.coins or 0
+
+    if itemType == "weapon" then
+        local price = (Config.Shop.Weapons[itemName] and Config.Shop.Weapons[itemName].price) or 0
+        if coins < price then
+            return
+        end
+
+        if not table.find(data.unlockedWeapons, itemName) then
+            table.insert(data.unlockedWeapons, itemName)
+            stats.Coins.Value -= price
+        end
+    elseif itemType == "skin" then
+        local price = (Config.Shop.Skins[itemName] and Config.Shop.Skins[itemName].price) or 0
+        if coins < price then
+            return
+        end
+
+        if not table.find(data.unlockedSkins, itemName) then
+            table.insert(data.unlockedSkins, itemName)
+            stats.Coins.Value -= price
+        end
+    end
+
+    broadcastHud()
+end)
+
+Remotes.SkinSelect.OnServerEvent:Connect(function(player, skinName)
+    local data = getPlayerStats(player)
+    if table.find(data.unlockedSkins, skinName) then
+        data.skin = skinName
+    end
+    broadcastHud()
 end)
 
 Players.PlayerAdded:Connect(function(player)
     handlePlayer(player)
+    lobbyReady[player] = false
     broadcastHud()
 end)
 
@@ -475,6 +754,8 @@ Players.PlayerRemoving:Connect(function(player)
     weaponByPlayer[player] = nil
     ammoByPlayer[player] = nil
     reloadingByPlayer[player] = nil
+    playerStats[player] = nil
+    lobbyReady[player] = nil
 end)
 
 for _, player in ipairs(Players:GetPlayers()) do
@@ -495,6 +776,10 @@ while true do
     if #Players:GetPlayers() == 0 then
         startLobby()
     elseif roundState == "Lobby" then
+        if allPlayersReady() then
+            roundTime = 0
+        end
+
         roundTime -= 1
         if roundTime <= 0 then
             startMatch()
@@ -506,6 +791,12 @@ while true do
         if roundTime <= 0 then
             finishMatch()
         else
+            broadcastHud()
+        end
+
+        if checkRoundWinner() then
+            roundState = "Round Over"
+            roundTime = Config.RoundOverLength
             broadcastHud()
         end
     elseif roundState == "Round Over" then

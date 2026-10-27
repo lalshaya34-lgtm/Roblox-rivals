@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -12,6 +13,67 @@ screenGui.Name = "RivalsOriginalHUD"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.Parent = playerGui
+
+local lobbyPanel = Instance.new("Frame")
+lobbyPanel.Size = UDim2.new(0.34, 0, 0.26, 0)
+lobbyPanel.Position = UDim2.new(0.33, 0, 0.1, 0)
+lobbyPanel.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
+lobbyPanel.BackgroundTransparency = 0.2
+lobbyPanel.BorderSizePixel = 0
+lobbyPanel.Parent = screenGui
+
+local lobbyTitle = Instance.new("TextLabel")
+lobbyTitle.Size = UDim2.new(1, -20, 0, 28)
+lobbyTitle.Position = UDim2.new(0, 10, 0, 6)
+lobbyTitle.BackgroundTransparency = 1
+lobbyTitle.Font = Enum.Font.GothamBold
+lobbyTitle.Text = "LOBBY"
+lobbyTitle.TextScaled = true
+lobbyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+lobbyTitle.Parent = lobbyPanel
+
+local classList = { "Scout", "Support", "Vanguard" }
+local modeList = { "Casual", "Ranked" }
+local classButtons = {}
+local modeButtons = {}
+
+local function createButton(parent, name, x, y, w, h, callback)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Size = UDim2.new(w, 0, h, 0)
+    button.Position = UDim2.new(x, 0, y, 0)
+    button.BackgroundColor3 = Color3.fromRGB(31, 41, 55)
+    button.BorderSizePixel = 0
+    button.Font = Enum.Font.GothamBold
+    button.Text = name
+    button.TextScaled = true
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Parent = parent
+    button.MouseButton1Click:Connect(callback)
+    return button
+end
+
+for i, className in ipairs(classList) do
+    local btn = createButton(lobbyPanel, className, (i - 1) * 0.3 + 0.06, 0.17, 0.24, 0.18, function()
+        remotes.ClassSelect:FireServer(className)
+    end)
+    classButtons[className] = btn
+end
+
+for i, modeName in ipairs(modeList) do
+    local btn = createButton(lobbyPanel, modeName, (i - 1) * 0.46 + 0.08, 0.42, 0.38, 0.18, function()
+        remotes.ModeSelect:FireServer(modeName)
+    end)
+    modeButtons[modeName] = btn
+end
+
+local readyButton = createButton(lobbyPanel, "Ready", 0.34, 0.67, 0.32, 0.22, function()
+    remotes.LobbyReady:FireServer(true)
+end)
+
+local shopButton = createButton(lobbyPanel, "Shop", 0.08, 0.67, 0.22, 0.22, function()
+    -- future shop UI hook
+end)
 
 local topBar = Instance.new("Frame")
 topBar.Size = UDim2.new(0.32, 0, 0.1, 0)
@@ -126,10 +188,36 @@ local currentAmmo = { weapon = "Rifle", clip = 24, reserve = 72 }
 local recoilValue = 0
 local weaponList = { "Rifle", "SMG", "Burst", "Shotgun", "DMR" }
 
+local hitSound = Instance.new("Sound")
+hitSound.SoundId = "rbxassetid://911903273"
+hitSound.Volume = 0.4
+hitSound.Parent = workspace
+
+local killSound = Instance.new("Sound")
+killSound.SoundId = "rbxassetid://911903273"
+killSound.Volume = 0.55
+killSound.Parent = workspace
+
 local function formatTime(seconds)
     local minutes = math.floor(seconds / 60)
     local secs = seconds % 60
     return string.format("%02d:%02d", minutes, secs)
+end
+
+local function tweenIn(frame)
+    local tween = TweenService:Create(frame, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = frame.Position + UDim2.new(0, 0, 0.02, 0),
+        BackgroundTransparency = 0.12,
+    })
+    tween:Play()
+end
+
+local function tweenOut(frame)
+    local tween = TweenService:Create(frame, TweenInfo.new(0.12, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+        Position = frame.Position - UDim2.new(0, 0, 0.02, 0),
+        BackgroundTransparency = 0.2,
+    })
+    tween:Play()
 end
 
 local function renderLeaderboard(entries)
@@ -257,6 +345,7 @@ local function fireWeapon()
 
     recoilValue += 0.08
     remotes.Shoot:FireServer(currentWeapon, camera.CFrame.LookVector)
+    hitSound:Play()
 end
 
 UserInputService.InputBegan:Connect(function(input, processed)
@@ -310,6 +399,31 @@ RunService.RenderStepped:Connect(function()
         local cframe = camera.CFrame
         camera.CFrame = CFrame.new(cframe.Position) * CFrame.Angles(-recoilValue, 0, 0)
     end
+end)
+
+for _, button in pairs(classButtons) do
+    button.MouseEnter:Connect(function()
+        tweenIn(button)
+    end)
+    button.MouseLeave:Connect(function()
+        tweenOut(button)
+    end)
+end
+
+for _, button in pairs(modeButtons) do
+    button.MouseEnter:Connect(function()
+        tweenIn(button)
+    end)
+    button.MouseLeave:Connect(function()
+        tweenOut(button)
+    end)
+end
+
+readyButton.MouseEnter:Connect(function()
+    tweenIn(readyButton)
+end)
+readyButton.MouseLeave:Connect(function()
+    tweenOut(readyButton)
 end)
 
 updateWeaponUI()
