@@ -9,12 +9,12 @@ RemotesFolder.Name = "Remotes"
 RemotesFolder.Parent = ReplicatedStorage
 
 local function ensureRemote(name)
-    local remote = RemotesFolder:FindFirstChild(name)
-    if remote then
-        return remote
+    local existing = RemotesFolder:FindFirstChild(name)
+    if existing then
+        return existing
     end
 
-    remote = Instance.new("RemoteEvent")
+    local remote = Instance.new("RemoteEvent")
     remote.Name = name
     remote.Parent = RemotesFolder
     return remote
@@ -24,7 +24,8 @@ return {
     Shoot = ensureRemote("Shoot"),
     Hud = ensureRemote("Hud"),
     Reload = ensureRemote("Reload"),
-    MoveState = ensureRemote("MoveState"),
+    MatchState = ensureRemote("MatchState"),
     Round = ensureRemote("Round"),
-    MatchState = ensureRemote("MatchState")
+    MoveState = ensureRemote("MoveState"),
+    Pickup = ensureRemote("Pickup")
 }
