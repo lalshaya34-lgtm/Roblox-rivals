@@ -1,6 +1,5 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
@@ -22,8 +21,18 @@ topBar.BackgroundTransparency = 0.15
 topBar.BorderSizePixel = 0
 topBar.Parent = screenGui
 
+local teamLabel = Instance.new("TextLabel")
+teamLabel.Size = UDim2.new(0.24, 0, 1, 0)
+teamLabel.BackgroundTransparency = 1
+teamLabel.Font = Enum.Font.GothamBold
+teamLabel.Text = "RED"
+teamLabel.TextScaled = true
+teamLabel.TextColor3 = Color3.fromRGB(239, 68, 68)
+teamLabel.Parent = topBar
+
 local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(0.5, 0, 1, 0)
+statusLabel.Size = UDim2.new(0.38, 0, 1, 0)
+statusLabel.Position = UDim2.new(0.25, 0, 0, 0)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Font = Enum.Font.GothamBold
 statusLabel.Text = "READY"
@@ -32,14 +41,25 @@ statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 statusLabel.Parent = topBar
 
 local timerLabel = Instance.new("TextLabel")
-timerLabel.Size = UDim2.new(0.5, 0, 1, 0)
-timerLabel.Position = UDim2.new(0.5, 0, 0, 0)
+timerLabel.Size = UDim2.new(0.34, 0, 1, 0)
+timerLabel.Position = UDim2.new(0.66, 0, 0, 0)
 timerLabel.BackgroundTransparency = 1
 timerLabel.Font = Enum.Font.GothamSemibold
 timerLabel.Text = "00:00"
 timerLabel.TextScaled = true
 timerLabel.TextColor3 = Color3.fromRGB(147, 197, 253)
 timerLabel.Parent = topBar
+
+local reloadLabel = Instance.new("TextLabel")
+reloadLabel.Size = UDim2.new(0.18, 0, 0.04, 0)
+reloadLabel.Position = UDim2.new(0.41, 0, 0.87, 0)
+reloadLabel.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
+reloadLabel.BackgroundTransparency = 0.15
+reloadLabel.Font = Enum.Font.GothamBold
+reloadLabel.Text = "READY"
+reloadLabel.TextScaled = true
+reloadLabel.TextColor3 = Color3.fromRGB(34, 197, 94)
+reloadLabel.Parent = screenGui
 
 local leaderboard = Instance.new("Frame")
 leaderboard.Size = UDim2.new(0.22, 0, 0.34, 0)
@@ -104,7 +124,6 @@ ammoLabel.Parent = weaponFrame
 local currentWeapon = "Rifle"
 local currentAmmo = { weapon = "Rifle", clip = 24, reserve = 72 }
 local recoilValue = 0
-local isSprinting = false
 local weaponList = { "Rifle", "SMG", "Burst", "Shotgun", "DMR" }
 
 local function formatTime(seconds)
@@ -179,6 +198,24 @@ local function updateHud(payload)
         renderKillFeed(payload.killFeed)
     end
 
+    if payload.teams and payload.teams[player.Name] then
+        local teamName = payload.teams[player.Name]
+        teamLabel.Text = string.upper(teamName)
+        if teamName == "Blue" then
+            teamLabel.TextColor3 = Color3.fromRGB(59, 130, 246)
+        else
+            teamLabel.TextColor3 = Color3.fromRGB(239, 68, 68)
+        end
+    end
+
+    if payload.reloading and payload.reloading[player.Name] then
+        reloadLabel.Text = "RELOADING"
+        reloadLabel.TextColor3 = Color3.fromRGB(245, 158, 11)
+    else
+        reloadLabel.Text = "READY"
+        reloadLabel.TextColor3 = Color3.fromRGB(34, 197, 94)
+    end
+
     if payload.loadout and payload.loadout[player.Name] then
         currentAmmo = payload.loadout[player.Name]
         currentWeapon = currentAmmo.weapon or currentWeapon
@@ -214,6 +251,10 @@ local function fireWeapon()
         return
     end
 
+    if (currentAmmo.clip or 0) <= 0 then
+        return
+    end
+
     recoilValue += 0.08
     remotes.Shoot:FireServer(currentWeapon, camera.CFrame.LookVector)
 end
@@ -224,7 +265,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
     end
 
     if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
-        isSprinting = true
         remotes.MoveState:FireServer(true)
     elseif input.KeyCode == Enum.KeyCode.Q then
         local index = 1
@@ -259,7 +299,6 @@ end)
 
 UserInputService.InputEnded:Connect(function(input)
     if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
-        isSprinting = false
         remotes.MoveState:FireServer(false)
     end
 end)

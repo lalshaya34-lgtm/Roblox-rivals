@@ -24,8 +24,8 @@ return {
     Shoot = ensureRemote("Shoot"),
     Hud = ensureRemote("Hud"),
     Reload = ensureRemote("Reload"),
-    MatchState = ensureRemote("MatchState"),
-    Round = ensureRemote("Round"),
     MoveState = ensureRemote("MoveState"),
-    Pickup = ensureRemote("Pickup")
+    Round = ensureRemote("Round"),
+    MatchState = ensureRemote("MatchState"),
+    TeamAssign = ensureRemote("TeamAssign")
 }

@@ -9,17 +9,30 @@ local Config = {
     JumpPower = 50,
     ArenaSize = 220,
 
+    Maps = {
+        "Lattice",
+        "Crimson",
+        "Nightfall"
+    },
+
+    TeamColors = {
+        Red = Color3.fromRGB(239, 68, 68),
+        Blue = Color3.fromRGB(59, 130, 246),
+    },
+
     SpawnPoints = {
-        Vector3.new(-42, 8, -34),
-        Vector3.new(42, 8, -34),
-        Vector3.new(-42, 8, 34),
-        Vector3.new(42, 8, 34),
-        Vector3.new(0, 8, -52),
-        Vector3.new(0, 8, 52),
-        Vector3.new(-52, 8, 0),
-        Vector3.new(52, 8, 0),
-        Vector3.new(-18, 8, 0),
-        Vector3.new(18, 8, 0)
+        Red = {
+            Vector3.new(-42, 8, -34),
+            Vector3.new(-42, 8, 34),
+            Vector3.new(-18, 8, 0),
+            Vector3.new(0, 8, -52),
+        },
+        Blue = {
+            Vector3.new(42, 8, -34),
+            Vector3.new(42, 8, 34),
+            Vector3.new(18, 8, 0),
+            Vector3.new(0, 8, 52),
+        }
     },
 
     Weapons = {
