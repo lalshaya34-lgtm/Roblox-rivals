@@ -1,0 +1,24 @@
+{
+  "name": "Roblox-rivals",
+  "tree": {
+    "$className": "DataModel",
+    "children": [
+      {
+        "name": "ReplicatedStorage",
+        "$path": "src/ReplicatedStorage"
+      },
+      {
+        "name": "ServerScriptService",
+        "$path": "src/ServerScriptService"
+      },
+      {
+        "name": "StarterPlayer",
+        "$path": "src/StarterPlayer"
+      },
+      {
+        "name": "Lighting",
+        "$path": "src/Lighting"
+      }
+    ]
+  }
+}
