@@ -7,7 +7,7 @@ local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Co
 local Remotes = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Remotes"))
 
 local roundState = "Lobby"
-local roundTime = Config.MatchLength
+local roundTime = Config.LobbyLength
 local roundActive = false
 local lastShotAt = {}
 local matchMessage = "WAITING FOR PLAYERS"
@@ -57,12 +57,12 @@ local function buildArena()
     ensurePart(arena, "EastWall", Vector3.new(wallThickness, wallHeight, wallSize), CFrame.new(wallOffset, wallHeight / 2, 0), Config.Colors.Arena, Enum.Material.SmoothPlastic)
 
     local obstacleConfigs = {
-        {"B1", Vector3.new(18, 16, 18), CFrame.new(-42, 8, -12)},
-        {"B2", Vector3.new(18, 16, 18), CFrame.new(42, 8, -12)},
-        {"B3", Vector3.new(18, 18, 18), CFrame.new(-42, 9, 32)},
-        {"B4", Vector3.new(18, 18, 18), CFrame.new(42, 9, 32)},
-        {"B5", Vector3.new(20, 12, 20), CFrame.new(0, 6, -38)},
-        {"B6", Vector3.new(20, 12, 20), CFrame.new(0, 6, 38)}
+        {"A1", Vector3.new(18, 16, 18), CFrame.new(-42, 8, -12)},
+        {"A2", Vector3.new(18, 16, 18), CFrame.new(42, 8, -12)},
+        {"A3", Vector3.new(18, 18, 18), CFrame.new(-42, 9, 32)},
+        {"A4", Vector3.new(18, 18, 18), CFrame.new(42, 9, 32)},
+        {"A5", Vector3.new(20, 12, 20), CFrame.new(0, 6, -38)},
+        {"A6", Vector3.new(20, 12, 20), CFrame.new(0, 6, 38)}
     }
 
     for _, data in ipairs(obstacleConfigs) do
@@ -170,6 +170,14 @@ local function awardKill(killer, victim)
     end
 end
 
+local function startLobby()
+    roundActive = false
+    roundState = "Lobby"
+    roundTime = Config.LobbyLength
+    matchMessage = "MATCH STARTING"
+    broadcastHud()
+end
+
 local function startMatch()
     roundActive = true
     roundState = "Live"
@@ -184,10 +192,10 @@ local function startMatch()
     end
 end
 
-local function endMatch()
+local function finishMatch()
     roundActive = false
     roundState = "Round Over"
-    roundTime = 0
+    roundTime = Config.RoundOverLength
     matchMessage = "ROUND OVER"
     broadcastHud()
 end
@@ -259,6 +267,7 @@ local function tryHitScan(player, direction)
 
     if targetHumanoid.Health <= 0 then
         awardKill(player, targetPlayer)
+
         task.delay(Config.RespawnDelay, function()
             if targetPlayer and targetPlayer.Character then
                 respawnPlayer(targetPlayer)
@@ -291,28 +300,33 @@ Lighting.Brightness = 2
 Lighting.OutdoorAmbient = Color3.fromRGB(120, 135, 160)
 Lighting.Ambient = Color3.fromRGB(70, 90, 120)
 
-startMatch()
+startLobby()
 
 while true do
     task.wait(1)
 
-    if roundActive then
+    if #Players:GetPlayers() == 0 then
+        startLobby()
+    elseif roundState == "Lobby" then
         roundTime -= 1
         if roundTime <= 0 then
-            endMatch()
-            task.wait(3)
             startMatch()
         else
             broadcastHud()
         end
-    else
-        if #Players:GetPlayers() > 0 then
-            roundState = "Lobby"
-            roundTime = Config.LobbyLength
-            matchMessage = "MATCH STARTING"
+    elseif roundState == "Live" then
+        roundTime -= 1
+        if roundTime <= 0 then
+            finishMatch()
+        else
             broadcastHud()
-            task.wait(Config.LobbyLength)
-            startMatch()
+        end
+    elseif roundState == "Round Over" then
+        roundTime -= 1
+        if roundTime <= 0 then
+            startLobby()
+        else
+            broadcastHud()
         end
     end
 end

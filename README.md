@@ -22,7 +22,7 @@ topBar.BorderSizePixel = 0
 topBar.Parent = screenGui
 
 local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, 0, 0.45, 0)
+statusLabel.Size = UDim2.new(0.45, 0, 1, 0)
 statusLabel.Position = UDim2.new(0, 0, 0, 0)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Font = Enum.Font.GothamBold
@@ -32,8 +32,8 @@ statusLabel.Text = "LIVE"
 statusLabel.Parent = topBar
 
 local timerLabel = Instance.new("TextLabel")
-timerLabel.Size = UDim2.new(1, 0, 0.55, 0)
-timerLabel.Position = UDim2.new(0, 0, 0.45, 0)
+timerLabel.Size = UDim2.new(0.45, 0, 1, 0)
+timerLabel.Position = UDim2.new(0.55, 0, 0, 0)
 timerLabel.BackgroundTransparency = 1
 timerLabel.Font = Enum.Font.GothamSemibold
 timerLabel.TextScaled = true
@@ -42,7 +42,7 @@ timerLabel.Text = "02:30"
 timerLabel.Parent = topBar
 
 local leaderboard = Instance.new("Frame")
-leaderboard.Size = UDim2.new(0.24, 0, 0.34, 0)
+leaderboard.Size = UDim2.new(0.22, 0, 0.36, 0)
 leaderboard.Position = UDim2.new(0.02, 0, 0.08, 0)
 leaderboard.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
 leaderboard.BackgroundTransparency = 0.18
@@ -50,7 +50,7 @@ leaderboard.BorderSizePixel = 0
 leaderboard.Parent = screenGui
 
 local boardTitle = Instance.new("TextLabel")
-boardTitle.Size = UDim2.new(1, -12, 0, 22)
+boardTitle.Size = UDim2.new(1, -12, 0, 24)
 boardTitle.Position = UDim2.new(0, 6, 0, 4)
 boardTitle.BackgroundTransparency = 1
 boardTitle.Font = Enum.Font.GothamBold
@@ -60,8 +60,8 @@ boardTitle.TextColor3 = Color3.fromRGB(148, 163, 184)
 boardTitle.Parent = leaderboard
 
 local boardList = Instance.new("ScrollingFrame")
-boardList.Size = UDim2.new(1, -12, 1, -32)
-boardList.Position = UDim2.new(0, 6, 0, 28)
+boardList.Size = UDim2.new(1, -12, 1, -34)
+boardList.Position = UDim2.new(0, 6, 0, 30)
 boardList.BackgroundTransparency = 1
 boardList.BorderSizePixel = 0
 boardList.ScrollBarThickness = 4
@@ -69,8 +69,8 @@ boardList.AutomaticCanvasSize = Enum.AutomaticSize.Y
 boardList.Parent = leaderboard
 
 local announcement = Instance.new("TextLabel")
-announcement.Size = UDim2.new(0.5, 0, 0.08, 0)
-announcement.Position = UDim2.new(0.25, 0, 0.12, 0)
+announcement.Size = UDim2.new(0.42, 0, 0.055, 0)
+announcement.Position = UDim2.new(0.29, 0, 0.12, 0)
 announcement.BackgroundTransparency = 1
 announcement.Font = Enum.Font.GothamBold
 announcement.TextScaled = true
@@ -171,7 +171,7 @@ end)
 
 updateHud({
     state = "Lobby",
-    roundTime = 150,
+    roundTime = 8,
     message = "READY",
     players = {}
 })
