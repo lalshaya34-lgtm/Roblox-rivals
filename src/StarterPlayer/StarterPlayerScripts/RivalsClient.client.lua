@@ -43,37 +43,29 @@ local function buildArena()
         arena.Parent = Workspace
     end
 
-    local base = ensurePart(arena, "Base", Vector3.new(220, 4, 220), CFrame.new(0, 0, 0), Config.Colors.Floor, Enum.Material.SmoothPlastic)
-    base.Position = Vector3.new(0, 0, 0)
+    ensurePart(arena, "Base", Vector3.new(220, 4, 220), CFrame.new(0, 0, 0), Config.Colors.Floor, Enum.Material.SmoothPlastic)
+    ensurePart(arena, "CenterPad", Vector3.new(20, 1, 20), CFrame.new(0, 2, 0), Config.Colors.Accent, Enum.Material.Neon)
 
-    local centerPad = ensurePart(arena, "CenterPad", Vector3.new(18, 1, 18), CFrame.new(0, 2, 0), Config.Colors.Accent, Enum.Material.Neon)
-    centerPad.Position = Vector3.new(0, 2, 0)
-
-    local wallOffset = 110
-    local wallHeight = 18
+    local wallSize = 220
+    local wallHeight = 20
     local wallThickness = 4
+    local wallOffset = 110
 
-    local boundaryData = {
-        {"NorthWall", Vector3.new(220, wallHeight, wallThickness), CFrame.new(0, wallHeight / 2, -wallOffset), Config.Colors.Arena},
-        {"SouthWall", Vector3.new(220, wallHeight, wallThickness), CFrame.new(0, wallHeight / 2, wallOffset), Config.Colors.Arena},
-        {"WestWall", Vector3.new(wallThickness, wallHeight, 220), CFrame.new(-wallOffset, wallHeight / 2, 0), Config.Colors.Arena},
-        {"EastWall", Vector3.new(wallThickness, wallHeight, 220), CFrame.new(wallOffset, wallHeight / 2, 0), Config.Colors.Arena}
-    }
+    ensurePart(arena, "NorthWall", Vector3.new(wallSize, wallHeight, wallThickness), CFrame.new(0, wallHeight / 2, -wallOffset), Config.Colors.Arena, Enum.Material.SmoothPlastic)
+    ensurePart(arena, "SouthWall", Vector3.new(wallSize, wallHeight, wallThickness), CFrame.new(0, wallHeight / 2, wallOffset), Config.Colors.Arena, Enum.Material.SmoothPlastic)
+    ensurePart(arena, "WestWall", Vector3.new(wallThickness, wallHeight, wallSize), CFrame.new(-wallOffset, wallHeight / 2, 0), Config.Colors.Arena, Enum.Material.SmoothPlastic)
+    ensurePart(arena, "EastWall", Vector3.new(wallThickness, wallHeight, wallSize), CFrame.new(wallOffset, wallHeight / 2, 0), Config.Colors.Arena, Enum.Material.SmoothPlastic)
 
-    for _, data in ipairs(boundaryData) do
-        ensurePart(arena, data[1], data[2], data[3], data[4], Enum.Material.SmoothPlastic)
-    end
-
-    local obstaclePositions = {
-        {"B1", Vector3.new(18, 16, 18), CFrame.new(-42, 8, -10)},
-        {"B2", Vector3.new(18, 16, 18), CFrame.new(42, 8, -10)},
+    local obstacleConfigs = {
+        {"B1", Vector3.new(18, 16, 18), CFrame.new(-42, 8, -12)},
+        {"B2", Vector3.new(18, 16, 18), CFrame.new(42, 8, -12)},
         {"B3", Vector3.new(18, 18, 18), CFrame.new(-42, 9, 32)},
         {"B4", Vector3.new(18, 18, 18), CFrame.new(42, 9, 32)},
-        {"B5", Vector3.new(20, 12, 20), CFrame.new(0, 6, -36)},
-        {"B6", Vector3.new(20, 12, 20), CFrame.new(0, 6, 36)}
+        {"B5", Vector3.new(20, 12, 20), CFrame.new(0, 6, -38)},
+        {"B6", Vector3.new(20, 12, 20), CFrame.new(0, 6, 38)}
     }
 
-    for _, data in ipairs(obstaclePositions) do
+    for _, data in ipairs(obstacleConfigs) do
         ensurePart(arena, data[1], data[2], data[3], Config.Colors.AccentDark, Enum.Material.SmoothPlastic)
     end
 end
@@ -98,11 +90,6 @@ local function createLeaderstats(player)
     deaths.Value = 0
     deaths.Parent = folder
 
-    local wins = Instance.new("IntValue")
-    wins.Name = "Wins"
-    wins.Value = 0
-    wins.Parent = folder
-
     return folder
 end
 
@@ -122,30 +109,25 @@ local function respawnPlayer(player)
     humanoid.Health = humanoid.MaxHealth
 end
 
-local function updateMatchMessage(value)
-    matchMessage = value
-    broadcastHud()
-end
-
 local function getLeaderboardData()
     local data = {}
     for _, player in ipairs(Players:GetPlayers()) do
         local stats = player:FindFirstChild("leaderstats")
         local kills = stats and stats:FindFirstChild("Kills") and stats.Kills.Value or 0
         local deaths = stats and stats:FindFirstChild("Deaths") and stats.Deaths.Value or 0
-        local isAlive = false
 
         local character = player.Character
+        local alive = false
         if character then
             local humanoid = character:FindFirstChildOfClass("Humanoid")
-            isAlive = humanoid and humanoid.Health > 0 or false
+            alive = humanoid and humanoid.Health > 0 or false
         end
 
         table.insert(data, {
             name = player.Name,
             kills = kills,
             deaths = deaths,
-            alive = isAlive
+            alive = alive
         })
     end
 
@@ -200,8 +182,6 @@ local function startMatch()
             respawnPlayer(player)
         end
     end
-
-    broadcastHud()
 end
 
 local function endMatch()
@@ -215,7 +195,7 @@ end
 local function handlePlayer(player)
     createLeaderstats(player)
 
-    player.CharacterAdded:Connect(function(character)
+    player.CharacterAdded:Connect(function()
         task.wait(0.2)
         respawnPlayer(player)
         broadcastHud()
@@ -254,8 +234,8 @@ local function tryHitScan(player, direction)
     local rayParams = RaycastParams.new()
     rayParams.FilterType = Enum.RaycastFilterType.Exclude
     rayParams.FilterDescendantsInstances = { character }
-    local hit = Workspace:Raycast(origin, lookVector * Config.HitRange, rayParams)
 
+    local hit = Workspace:Raycast(origin, lookVector * Config.HitRange, rayParams)
     if not hit or not hit.Instance then
         return
     end
@@ -279,24 +259,8 @@ local function tryHitScan(player, direction)
 
     if targetHumanoid.Health <= 0 then
         awardKill(player, targetPlayer)
-        local killerStats = player:FindFirstChild("leaderstats")
-        if killerStats and killerStats:FindFirstChild("Wins") then
-            -- rounds deterministically give a win when a player reaches a score threshold
-            local score = killerStats.Kills.Value
-            if score >= 5 then
-                killerStats.Wins.Value += 1
-                killerStats.Kills.Value = 0
-                for _, otherPlayer in ipairs(Players:GetPlayers()) do
-                    local stats = otherPlayer:FindFirstChild("leaderstats")
-                    if stats then
-                        stats.Kills.Value = 0
-                    end
-                end
-            end
-        end
-
         task.delay(Config.RespawnDelay, function()
-            if targetPlayer and targetPlayer.Parent and targetPlayer.Character then
+            if targetPlayer and targetPlayer.Character then
                 respawnPlayer(targetPlayer)
                 broadcastHud()
             end
@@ -324,8 +288,8 @@ end
 buildArena()
 Lighting.TimeOfDay = 14
 Lighting.Brightness = 2
-Lighting.OutdoorAmbient = Color3.fromRGB(140, 155, 180)
-Lighting.Ambient = Color3.fromRGB(85, 95, 110)
+Lighting.OutdoorAmbient = Color3.fromRGB(120, 135, 160)
+Lighting.Ambient = Color3.fromRGB(70, 90, 120)
 
 startMatch()
 
@@ -334,7 +298,6 @@ while true do
 
     if roundActive then
         roundTime -= 1
-
         if roundTime <= 0 then
             endMatch()
             task.wait(3)
@@ -344,9 +307,9 @@ while true do
         end
     else
         if #Players:GetPlayers() > 0 then
-            matchMessage = "LOBBY"
             roundState = "Lobby"
             roundTime = Config.LobbyLength
+            matchMessage = "MATCH STARTING"
             broadcastHud()
             task.wait(Config.LobbyLength)
             startMatch()

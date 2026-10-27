@@ -1,22 +1,22 @@
 local Config = {
     MatchLength = 150,
     LobbyLength = 8,
-    RespawnDelay = 1.8,
+    RespawnDelay = 1.6,
     Damage = 25,
     FireRate = 0.12,
-    HitRange = 350,
+    HitRange = 360,
     WalkSpeed = 16,
     JumpPower = 50,
-    ArenaSize = 200,
+    ArenaSize = 220,
     SpawnPoints = {
-        Vector3.new(-38, 8, -34),
-        Vector3.new(38, 8, -34),
-        Vector3.new(-38, 8, 34),
-        Vector3.new(38, 8, 34),
-        Vector3.new(0, 8, -48),
-        Vector3.new(0, 8, 48),
-        Vector3.new(-52, 8, 0),
-        Vector3.new(52, 8, 0)
+        Vector3.new(-42, 8, -34),
+        Vector3.new(42, 8, -34),
+        Vector3.new(-42, 8, 34),
+        Vector3.new(42, 8, 34),
+        Vector3.new(0, 8, -52),
+        Vector3.new(0, 8, 52),
+        Vector3.new(-56, 8, 0),
+        Vector3.new(56, 8, 0)
     },
     Colors = {
         Floor = Color3.fromRGB(15, 23, 42),

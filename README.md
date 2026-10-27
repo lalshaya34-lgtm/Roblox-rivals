@@ -46,7 +46,7 @@ leaderboard.Size = UDim2.new(0.24, 0, 0.34, 0)
 leaderboard.Position = UDim2.new(0.02, 0, 0.08, 0)
 leaderboard.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
 leaderboard.BackgroundTransparency = 0.18
-topBar.BorderSizePixel = 0
+leaderboard.BorderSizePixel = 0
 leaderboard.Parent = screenGui
 
 local boardTitle = Instance.new("TextLabel")
@@ -65,7 +65,7 @@ boardList.Position = UDim2.new(0, 6, 0, 28)
 boardList.BackgroundTransparency = 1
 boardList.BorderSizePixel = 0
 boardList.ScrollBarThickness = 4
-table.insert(boardList:GetChildren(), nil)
+boardList.AutomaticCanvasSize = Enum.AutomaticSize.Y
 boardList.Parent = leaderboard
 
 local announcement = Instance.new("TextLabel")
