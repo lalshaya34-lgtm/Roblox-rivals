@@ -14,77 +14,16 @@ screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.Parent = playerGui
 
-local lobbyPanel = Instance.new("Frame")
-lobbyPanel.Size = UDim2.new(0.34, 0, 0.26, 0)
-lobbyPanel.Position = UDim2.new(0.33, 0, 0.1, 0)
-lobbyPanel.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
-lobbyPanel.BackgroundTransparency = 0.2
-lobbyPanel.BorderSizePixel = 0
-lobbyPanel.Parent = screenGui
-
-local lobbyTitle = Instance.new("TextLabel")
-lobbyTitle.Size = UDim2.new(1, -20, 0, 28)
-lobbyTitle.Position = UDim2.new(0, 10, 0, 6)
-lobbyTitle.BackgroundTransparency = 1
-lobbyTitle.Font = Enum.Font.GothamBold
-lobbyTitle.Text = "LOBBY"
-lobbyTitle.TextScaled = true
-lobbyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-lobbyTitle.Parent = lobbyPanel
-
-local classList = { "Scout", "Support", "Vanguard" }
-local modeList = { "Casual", "Ranked" }
-local classButtons = {}
-local modeButtons = {}
-
-local function createButton(parent, name, x, y, w, h, callback)
-    local button = Instance.new("TextButton")
-    button.Name = name
-    button.Size = UDim2.new(w, 0, h, 0)
-    button.Position = UDim2.new(x, 0, y, 0)
-    button.BackgroundColor3 = Color3.fromRGB(31, 41, 55)
-    button.BorderSizePixel = 0
-    button.Font = Enum.Font.GothamBold
-    button.Text = name
-    button.TextScaled = true
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.Parent = parent
-    button.MouseButton1Click:Connect(callback)
-    return button
-end
-
-for i, className in ipairs(classList) do
-    local btn = createButton(lobbyPanel, className, (i - 1) * 0.3 + 0.06, 0.17, 0.24, 0.18, function()
-        remotes.ClassSelect:FireServer(className)
-    end)
-    classButtons[className] = btn
-end
-
-for i, modeName in ipairs(modeList) do
-    local btn = createButton(lobbyPanel, modeName, (i - 1) * 0.46 + 0.08, 0.42, 0.38, 0.18, function()
-        remotes.ModeSelect:FireServer(modeName)
-    end)
-    modeButtons[modeName] = btn
-end
-
-local readyButton = createButton(lobbyPanel, "Ready", 0.34, 0.67, 0.32, 0.22, function()
-    remotes.LobbyReady:FireServer(true)
-end)
-
-local shopButton = createButton(lobbyPanel, "Shop", 0.08, 0.67, 0.22, 0.22, function()
-    -- future shop UI hook
-end)
-
 local topBar = Instance.new("Frame")
-topBar.Size = UDim2.new(0.32, 0, 0.1, 0)
+topBar.Size = UDim2.new(0.32, 0, 0.08, 0)
 topBar.Position = UDim2.new(0.34, 0, 0.02, 0)
 topBar.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
-topBar.BackgroundTransparency = 0.15
+topBar.BackgroundTransparency = 0.18
 topBar.BorderSizePixel = 0
 topBar.Parent = screenGui
 
 local teamLabel = Instance.new("TextLabel")
-teamLabel.Size = UDim2.new(0.24, 0, 1, 0)
+teamLabel.Size = UDim2.new(0.26, 0, 1, 0)
 teamLabel.BackgroundTransparency = 1
 teamLabel.Font = Enum.Font.GothamBold
 teamLabel.Text = "RED"
@@ -94,7 +33,7 @@ teamLabel.Parent = topBar
 
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(0.38, 0, 1, 0)
-statusLabel.Position = UDim2.new(0.25, 0, 0, 0)
+statusLabel.Position = UDim2.new(0.26, 0, 0, 0)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Font = Enum.Font.GothamBold
 statusLabel.Text = "READY"
@@ -112,16 +51,29 @@ timerLabel.TextScaled = true
 timerLabel.TextColor3 = Color3.fromRGB(147, 197, 253)
 timerLabel.Parent = topBar
 
-local reloadLabel = Instance.new("TextLabel")
-reloadLabel.Size = UDim2.new(0.18, 0, 0.04, 0)
-reloadLabel.Position = UDim2.new(0.41, 0, 0.87, 0)
-reloadLabel.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
-reloadLabel.BackgroundTransparency = 0.15
-reloadLabel.Font = Enum.Font.GothamBold
-reloadLabel.Text = "READY"
-reloadLabel.TextScaled = true
-reloadLabel.TextColor3 = Color3.fromRGB(34, 197, 94)
-reloadLabel.Parent = screenGui
+local healthFrame = Instance.new("Frame")
+healthFrame.Size = UDim2.new(0.2, 0, 0.04, 0)
+healthFrame.Position = UDim2.new(0.02, 0, 0.92, 0)
+healthFrame.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
+healthFrame.BackgroundTransparency = 0.2
+healthFrame.BorderSizePixel = 0
+healthFrame.Parent = screenGui
+
+local healthBarFill = Instance.new("Frame")
+healthBarFill.Size = UDim2.new(1, -12, 1, -8)
+healthBarFill.Position = UDim2.new(0, 6, 0, 4)
+healthBarFill.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+healthBarFill.BorderSizePixel = 0
+healthBarFill.Parent = healthFrame
+
+local healthLabel = Instance.new("TextLabel")
+healthLabel.Size = UDim2.new(1, 0, 1, 0)
+healthLabel.BackgroundTransparency = 1
+healthLabel.Font = Enum.Font.GothamBold
+healthLabel.Text = "100 / 100"
+healthLabel.TextScaled = true
+healthLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+healthLabel.Parent = healthFrame
 
 local leaderboard = Instance.new("Frame")
 leaderboard.Size = UDim2.new(0.22, 0, 0.34, 0)
@@ -150,8 +102,8 @@ leaderboardList.ScrollBarThickness = 4
 leaderboardList.Parent = leaderboard
 
 local killFeedFrame = Instance.new("Frame")
-killFeedFrame.Size = UDim2.new(0.25, 0, 0.18, 0)
-killFeedFrame.Position = UDim2.new(0.75, 0, 0.12, 0)
+killFeedFrame.Size = UDim2.new(0.28, 0, 0.18, 0)
+killFeedFrame.Position = UDim2.new(0.72, 0, 0.12, 0)
 killFeedFrame.BackgroundTransparency = 1
 killFeedFrame.BorderSizePixel = 0
 killFeedFrame.Parent = screenGui
@@ -183,10 +135,45 @@ ammoLabel.TextScaled = true
 ammoLabel.TextColor3 = Color3.fromRGB(191, 219, 254)
 ammoLabel.Parent = weaponFrame
 
+local centerCrosshair = Instance.new("Frame")
+centerCrosshair.Size = UDim2.new(0.012, 0, 0.028, 0)
+centerCrosshair.Position = UDim2.new(0.494, 0, 0.485, 0)
+centerCrosshair.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+centerCrosshair.BorderSizePixel = 0
+centerCrosshair.Parent = screenGui
+
+local crosshairHorizontal = centerCrosshair:Clone()
+crosshairHorizontal.Size = UDim2.new(0.028, 0, 0.012, 0)
+crosshairHorizontal.Position = UDim2.new(0.486, 0, 0.494, 0)
+crosshairHorizontal.Parent = screenGui
+
+local lobbyPanel = Instance.new("Frame")
+lobbyPanel.Size = UDim2.new(0.34, 0, 0.26, 0)
+lobbyPanel.Position = UDim2.new(0.33, 0, 0.1, 0)
+lobbyPanel.BackgroundColor3 = Color3.fromRGB(15, 23, 42)
+lobbyPanel.BackgroundTransparency = 0.2
+lobbyPanel.BorderSizePixel = 0
+lobbyPanel.Parent = screenGui
+
+local lobbyTitle = Instance.new("TextLabel")
+lobbyTitle.Size = UDim2.new(1, -20, 0, 28)
+lobbyTitle.Position = UDim2.new(0, 10, 0, 6)
+lobbyTitle.BackgroundTransparency = 1
+lobbyTitle.Font = Enum.Font.GothamBold
+lobbyTitle.Text = "LOBBY"
+lobbyTitle.TextScaled = true
+lobbyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+lobbyTitle.Parent = lobbyPanel
+
+local classList = { "Scout", "Support", "Vanguard" }
+local modeList = { "Casual", "Ranked" }
+local classButtons = {}
+local modeButtons = {}
+local weaponList = { "Rifle", "SMG", "Burst", "Shotgun", "DMR", "Revolver" }
+
 local currentWeapon = "Rifle"
 local currentAmmo = { weapon = "Rifle", clip = 24, reserve = 72 }
 local recoilValue = 0
-local weaponList = { "Rifle", "SMG", "Burst", "Shotgun", "DMR" }
 
 local hitSound = Instance.new("Sound")
 hitSound.SoundId = "rbxassetid://911903273"
@@ -204,6 +191,22 @@ local function formatTime(seconds)
     return string.format("%02d:%02d", minutes, secs)
 end
 
+local function createButton(parent, name, x, y, w, h, callback)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Size = UDim2.new(w, 0, h, 0)
+    button.Position = UDim2.new(x, 0, y, 0)
+    button.BackgroundColor3 = Color3.fromRGB(31, 41, 55)
+    button.BorderSizePixel = 0
+    button.Font = Enum.Font.GothamBold
+    button.Text = name
+    button.TextScaled = true
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Parent = parent
+    button.MouseButton1Click:Connect(callback)
+    return button
+end
+
 local function tweenIn(frame)
     local tween = TweenService:Create(frame, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Position = frame.Position + UDim2.new(0, 0, 0.02, 0),
@@ -219,6 +222,28 @@ local function tweenOut(frame)
     })
     tween:Play()
 end
+
+for i, className in ipairs(classList) do
+    local btn = createButton(lobbyPanel, className, (i - 1) * 0.3 + 0.06, 0.17, 0.24, 0.18, function()
+        remotes.ClassSelect:FireServer(className)
+    end)
+    classButtons[className] = btn
+end
+
+for i, modeName in ipairs(modeList) do
+    local btn = createButton(lobbyPanel, modeName, (i - 1) * 0.46 + 0.08, 0.42, 0.38, 0.18, function()
+        remotes.ModeSelect:FireServer(modeName)
+    end)
+    modeButtons[modeName] = btn
+end
+
+local readyButton = createButton(lobbyPanel, "Ready", 0.34, 0.67, 0.32, 0.22, function()
+    remotes.LobbyReady:FireServer(true)
+end)
+
+local shopButton = createButton(lobbyPanel, "Shop", 0.08, 0.67, 0.22, 0.22, function()
+    -- future shop UI hook
+end)
 
 local function renderLeaderboard(entries)
     for _, child in ipairs(leaderboardList:GetChildren()) do
@@ -296,12 +321,26 @@ local function updateHud(payload)
         end
     end
 
+    if payload.health and payload.health[player.Name] ~= nil then
+        local healthValue = tonumber(payload.health[player.Name]) or 100
+        local maxHealth = 100
+        local percent = math.clamp(healthValue / maxHealth, 0, 1)
+        healthBarFill.Size = UDim2.new(percent, 0, 1, -8)
+        healthLabel.Text = string.format("%d / %d", math.floor(healthValue), maxHealth)
+        if percent < 0.35 then
+            healthBarFill.BackgroundColor3 = Color3.fromRGB(248, 113, 113)
+        elseif percent < 0.7 then
+            healthBarFill.BackgroundColor3 = Color3.fromRGB(250, 204, 21)
+        else
+            healthBarFill.BackgroundColor3 = Color3.fromRGB(34, 197, 94)
+        end
+    end
+
     if payload.reloading and payload.reloading[player.Name] then
-        reloadLabel.Text = "RELOADING"
-        reloadLabel.TextColor3 = Color3.fromRGB(245, 158, 11)
+        statusLabel.Text = "RELOADING"
+        statusLabel.TextColor3 = Color3.fromRGB(245, 158, 11)
     else
-        reloadLabel.Text = "READY"
-        reloadLabel.TextColor3 = Color3.fromRGB(34, 197, 94)
+        statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     end
 
     if payload.loadout and payload.loadout[player.Name] then
@@ -340,6 +379,7 @@ local function fireWeapon()
     end
 
     if (currentAmmo.clip or 0) <= 0 then
+        remotes.Reload:FireServer()
         return
     end
 
@@ -379,6 +419,8 @@ UserInputService.InputBegan:Connect(function(input, processed)
         switchWeapon("Shotgun")
     elseif input.KeyCode == Enum.KeyCode.Five then
         switchWeapon("DMR")
+    elseif input.KeyCode == Enum.KeyCode.Six then
+        switchWeapon("Revolver")
     elseif input.KeyCode == Enum.KeyCode.R then
         remotes.Reload:FireServer()
     elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -424,6 +466,13 @@ readyButton.MouseEnter:Connect(function()
 end)
 readyButton.MouseLeave:Connect(function()
     tweenOut(readyButton)
+end)
+
+shopButton.MouseEnter:Connect(function()
+    tweenIn(shopButton)
+end)
+shopButton.MouseLeave:Connect(function()
+    tweenOut(shopButton)
 end)
 
 updateWeaponUI()
