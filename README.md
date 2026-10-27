@@ -11,6 +11,8 @@ local playerGui = player:WaitForChild("PlayerGui")
 local currentWeapon = "Rifle"
 local currentAmmo = { weapon = "Rifle", clip = 24, reserve = 72, label = "Rifle" }
 local recoilValue = 0
+local isSprinting = false
+local sprintHeld = false
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "RivalsHUD"
@@ -67,6 +69,16 @@ ammoLabel.TextScaled = true
 ammoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 ammoLabel.Text = "24 / 72"
 ammoLabel.Parent = screenGui
+
+local speedLabel = Instance.new("TextLabel")
+speedLabel.Size = UDim2.new(0.14, 0, 0.04, 0)
+speedLabel.Position = UDim2.new(0.84, 0, 0.11, 0)
+speedLabel.BackgroundTransparency = 1
+speedLabel.Font = Enum.Font.GothamMedium
+speedLabel.TextScaled = true
+speedLabel.TextColor3 = Color3.fromRGB(96, 165, 250)
+speedLabel.Text = "SPD 16"
+speedLabel.Parent = screenGui
 
 local leaderboard = Instance.new("Frame")
 leaderboard.Size = UDim2.new(0.22, 0, 0.36, 0)
@@ -170,6 +182,8 @@ verticalLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 verticalLine.BorderSizePixel = 0
 verticalLine.Parent = crosshair
 
+local weaponList = { "Rifle", "SMG", "Burst", "Shotgun", "DMR" }
+
 local function formatTime(seconds)
     local minutes = math.floor(seconds / 60)
     local secondsLeft = seconds % 60
@@ -224,6 +238,7 @@ local function updateAmmoUI()
     if currentAmmo then
         ammoLabel.Text = string.format("%d / %d", currentAmmo.clip, currentAmmo.reserve)
         weaponLabel.Text = string.upper(currentAmmo.weapon or "Rifle")
+        speedLabel.Text = isSprinting and "SPD 22" or "SPD 16"
     end
 end
 
@@ -270,13 +285,22 @@ Remotes.Hud.OnClientEvent:Connect(function(payload)
     updateHud(payload)
 end)
 
-local function switchWeapon(newWeapon)
-    if newWeapon == "Rifle" or newWeapon == "SMG" then
-        currentWeapon = newWeapon
-        currentAmmo.weapon = newWeapon
-        updateAmmoUI()
-        Remotes.Shoot:FireServer(newWeapon, Workspace.CurrentCamera and Workspace.CurrentCamera.CFrame.LookVector or Vector3.new(0, 0, -1))
+local function switchWeapon(nextWeapon)
+    local valid = false
+    for _, weaponName in ipairs(weaponList) do
+        if weaponName == nextWeapon then
+            valid = true
+            break
+        end
     end
+
+    if not valid then
+        return
+    end
+
+    currentWeapon = nextWeapon
+    currentAmmo.weapon = nextWeapon
+    updateAmmoUI()
 end
 
 local function fireWeapon()
@@ -288,6 +312,10 @@ local function fireWeapon()
     local lookVector = camera.CFrame.LookVector
     recoilValue += 0.08
     Remotes.Shoot:FireServer(currentWeapon, lookVector)
+end
+
+local function sendSprintState()
+    Remotes.MoveState:FireServer(isSprinting)
 end
 
 RunService.RenderStepped:Connect(function()
@@ -304,20 +332,48 @@ UserInputService.InputBegan:Connect(function(input, processed)
         return
     end
 
-    if input.KeyCode == Enum.KeyCode.Q then
-        if currentWeapon == "Rifle" then
-            switchWeapon("SMG")
-        else
-            switchWeapon("Rifle")
+    if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
+        sprintHeld = true
+        isSprinting = true
+        sendSprintState()
+        updateAmmoUI()
+    elseif input.KeyCode == Enum.KeyCode.Q then
+        local index = 1
+        for i, weaponName in ipairs(weaponList) do
+            if weaponName == currentWeapon then
+                index = i
+                break
+            end
         end
+
+        index = index + 1
+        if index > #weaponList then
+            index = 1
+        end
+        switchWeapon(weaponList[index])
     elseif input.KeyCode == Enum.KeyCode.One then
         switchWeapon("Rifle")
     elseif input.KeyCode == Enum.KeyCode.Two then
         switchWeapon("SMG")
+    elseif input.KeyCode == Enum.KeyCode.Three then
+        switchWeapon("Burst")
+    elseif input.KeyCode == Enum.KeyCode.Four then
+        switchWeapon("Shotgun")
+    elseif input.KeyCode == Enum.KeyCode.Five then
+        switchWeapon("DMR")
     elseif input.KeyCode == Enum.KeyCode.R then
         Remotes.Reload:FireServer()
     elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
         fireWeapon()
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
+        sprintHeld = false
+        isSprinting = false
+        sendSprintState()
+        updateAmmoUI()
     end
 end)
 

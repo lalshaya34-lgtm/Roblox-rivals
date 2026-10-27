@@ -24,6 +24,7 @@ return {
     Shoot = ensureRemote("Shoot"),
     Hud = ensureRemote("Hud"),
     Reload = ensureRemote("Reload"),
+    MoveState = ensureRemote("MoveState"),
     Round = ensureRemote("Round"),
     MatchState = ensureRemote("MatchState")
 }
