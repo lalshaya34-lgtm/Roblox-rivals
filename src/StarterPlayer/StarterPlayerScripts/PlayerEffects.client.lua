@@ -1,2 +1,0 @@
--- Deprecated reset file: this file was cleared during the project reset.
--- The project has been rebuilt from scratch.
